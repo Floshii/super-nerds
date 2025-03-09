@@ -1,0 +1,3029 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0a0a20;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow: hidden;
+    }
+    #gameContainer {
+      position: relative;
+      margin: 10px auto;
+    }
+    canvas {
+      display: block;
+      image-rendering: pixelated;
+      border: 2px solid #00ff00;
+    }
+    h1 {
+      color: #0f0;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      margin: 10px 0;
+      text-align: center;
+      text-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
+      font-size: 24px;
+    }
+    button {
+      background-color: #222;
+      color: #0f0;
+      border: 2px solid #0f0;
+      padding: 8px 16px;
+      font-family: 'Courier New', monospace;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      cursor: pointer;
+      margin: 5px;
+      font-size: 14px;
+    }
+    button:hover {
+      background-color: #0f0;
+      color: #000;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
+    }
+    #gameOver {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%;
+      padding: 20px;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border: 2px solid #ff0000;
+      z-index: 100;
+    }
+    #levelUp {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%;
+      padding: 20px;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border: 2px solid #00ff00;
+      z-index: 100;
+    }
+    #endScreen {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%;
+      padding: 20px;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border: 2px solid #00ffff;
+      z-index: 100;
+    }
+    #endScreen h2 {
+      color: #00ffff;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      margin: 10px 0;
+      text-align: center;
+      text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+    }
+    #endScreen button {
+      background-color: #222;
+      color: #00ffff;
+      border: 2px solid #00ffff;
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: 16px;
+    }
+    #endScreen button:hover {
+      background-color: #00ffff;
+      color: #000;
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+    }
+    .instructions {
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #0f0;
+      margin: 10px 0;
+      font-size: 12px;
+      max-width: 500px;
+      text-align: center;
+    }
+    #levelInfo {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 5px 10px;
+      border-radius: 5px;
+      border: 1px solid #0f0;
+      font-size: 12px;
+      text-align: right;
+    }
+    .email-form {
+      margin-top: 15px;
+      width: 100%;
+      max-width: 300px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .email-form input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      background-color: #222;
+      color: #0f0;
+      border: 2px solid #0f0;
+      font-family: 'Courier New', monospace;
+      outline: none;
+    }
+    .email-form input:focus {
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
+    }
+    .email-form label {
+      margin-bottom: 5px;
+      color: #0f0;
+      font-size: 14px;
+      text-align: center;
+    }
+    .email-form button {
+      margin-top: 5px;
+    }
+    .email-form .message {
+      margin-top: 5px;
+      font-size: 12px;
+      color: #0f0;
+      text-align: center;
+    }
+    #gameOverButtons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 15px;
+      width: 100%;
+      max-width: 300px;
+    }
+    .continue-hint {
+      font-size: 12px;
+      color: #ff9900;
+      margin-top: 10px;
+      text-align: center;
+    }
+    #continueFromLevelButton:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
+  <script>
+    // Supabase configuration
+    const SUPABASE_URL = 'https://fqdfoalxokjfsknqqcwz.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxZGZvYWx4b2tqZnNrbnFxY3d6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwMDIxMjIsImV4cCI6MjA1NjU3ODEyMn0.mm8NQGRQ8fxkKL_8jV5R5LdGy9A73jwjXH9ug7OEgTk';
+    
+    // Initialize Supabase client
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // File d'attente pour les opérations Supabase
+    const supabaseQueue = [];
+    let isProcessingQueue = false;
+    
+    // Fonction pour traiter la file d'attente en arrière-plan
+    async function processSupabaseQueue() {
+      if (isProcessingQueue || supabaseQueue.length === 0) return;
+      
+      isProcessingQueue = true;
+      
+      try {
+        const item = supabaseQueue.shift();
+        
+        if (item && item.type === 'saveScore') {
+          try {
+            const { data, error } = await supabaseClient
+              .from('leaderboard')
+              .insert([{ 
+                email: item.email, 
+                score: item.score, 
+                level: item.level
+              }]);
+              
+            if (error && DEBUG) {
+              console.error('Erreur Supabase lors du traitement de la file:', error);
+            }
+          } catch (err) {
+            if (DEBUG) console.error('Erreur lors du traitement de la file:', err);
+          }
+        }
+      } finally {
+        isProcessingQueue = false;
+        
+        // Continuer à traiter la file si d'autres éléments sont présents
+        if (supabaseQueue.length > 0) {
+          setTimeout(processSupabaseQueue, 1000); // Attendre 1 seconde avant de traiter le prochain élément
+        }
+      }
+    }
+    
+    // Fonction pour enregistrer le score - version optimisée
+    async function saveScore(email, score, level) {
+      if (DEBUG) console.log(`Enregistrement du score: ${score} points pour ${email} au niveau ${level}`);
+      
+      // Toujours sauvegarder localement d'abord (rapide)
+      saveScoreLocally(email, score, level);
+      
+      // Ajouter à la file d'attente pour Supabase (traitement en arrière-plan)
+      supabaseQueue.push({
+        type: 'saveScore',
+        email: email,
+        score: score,
+        level: level
+      });
+      
+      // Démarrer le traitement de la file si ce n'est pas déjà fait
+      setTimeout(processSupabaseQueue, 100);
+      
+      // Retourner immédiatement un succès (puisque sauvegardé localement)
+      return { success: true };
+    }
+    
+    // Fonction de sauvegarde locale (fallback)
+    function saveScoreLocally(email, score, level) {
+      if (DEBUG) console.log(`Sauvegarde locale du score: ${score} points pour ${email} au niveau ${level}`);
+      
+      const scoreData = {
+        email: email,
+        score: score,
+        level: level,
+        date: new Date().toISOString()
+      };
+      
+      let savedScores = JSON.parse(localStorage.getItem('superNerdsScores') || '[]');
+      savedScores.push(scoreData);
+      localStorage.setItem('superNerdsScores', JSON.stringify(savedScores));
+    }
+    
+    // Rendre la fonction disponible globalement
+    window.saveScore = saveScore;
+  </script>
+</head>
+<body>
+  <h1>The Super Nerds Adventure</h1>
+  <div id="gameContainer">
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="levelInfo">
+      <p>Level: <span id="currentLevel">1</span> - <span id="levelName">The Nerd Awakens</span></p>
+    </div>
+    <div id="gameOver">
+      <h2>GAME OVER</h2>
+      <p>Your Score: <span id="finalScore">0</span></p>
+      <div class="email-form">
+        <label for="leaderboardEmail">Enter your email to save your score:</label>
+        <input type="email" id="leaderboardEmail" placeholder="your@email.com">
+        <button id="submitEmail">Save Score</button>
+        <div id="emailMessage" class="message"></div>
+      </div>
+      <div id="gameOverButtons">
+        <button id="restartButton">Start Over</button>
+        <button id="continueFromLevelButton" disabled>Continue from Level <span id="currentLevelGameOver">1</span></button>
+      </div>
+      <p class="continue-hint">Submit your email to unlock the continue option!</p>
+    </div>
+    <div id="levelUp">
+      <h2>LEVEL UP!</h2>
+      <p>Welcome to Level <span id="newLevel">2</span>:</p>
+      <h3><span id="newLevelName">The First Code</span></h3>
+      <p id="levelDescription">Your journey continues as you face new challenges...</p>
+      <button id="continueButton">Continue</button>
+    </div>
+    <div id="endScreen">
+      <h2>CONGRATULATIONS!</h2>
+      <p>"Business is just another game"</p>
+      <button id="unlockSuperPowersButton">Débloque de vrais super-pouvoirs</button>
+      <button id="continuePlayingButton" style="margin-top: 15px;">Continue Playing</button>
+    </div>
+    </div>
+  </div>
+  <button id="startButton">Start Game</button>
+  <div class="instructions">
+    <p>ARROW KEYS to move | SPACE to shoot | Collect power-ups!</p>
+    <p>Progress through life stages from teenage nerd to adult super nerds!</p>
+    <p>Made with love by <a href="https://www.youtube.com/@FlorentThurin" target="_blank" style="color: #0f0; text-decoration: underline;">Florent Thurin</a></p>
+  </div>
+
+  <script>
+    // DOM elements
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const startButton = document.getElementById('startButton');
+    const restartButton = document.getElementById('restartButton');
+    const continueButton = document.getElementById('continueButton');
+    const continueFromLevelButton = document.getElementById('continueFromLevelButton');
+    const submitEmailButton = document.getElementById('submitEmail');
+    const leaderboardEmail = document.getElementById('leaderboardEmail');
+    const emailMessage = document.getElementById('emailMessage');
+    const unlockSuperPowersButton = document.getElementById('unlockSuperPowersButton');
+    const continuePlayingButton = document.getElementById('continuePlayingButton');
+    
+    // Debug mode - set to false to disable console logs
+    const DEBUG = false;
+    
+    // Ajouter après les constantes DOM et avant les variables de jeu
+    
+    // Game variables
+    let ship;
+    let bullets = [];
+    let obstacles = [];
+    let stars = [];
+    let particles = [];
+    let textParticles = [];
+    let powerUps = [];
+    let activePowerUps = {};
+    let miniBoss = null;
+    let bossDefeated = false;
+    let score = 0;
+    let gameRunning = false;
+    let keys = {};
+    let frameCount = 0;
+    
+    // Level system
+    let currentLevel = 1;
+    let scoreForNextLevel = 1000;
+    let levelMultiplier = 1.5;
+    
+// Level definitions
+const LEVELS = [
+  {
+    id: 1,
+    name: "The Nerd Awakens",
+    description: "Teenage troubles: school, gaming, coding for fun, internet lag.",
+    obstacles: ["Math homework", "Mom cutting the WiFi", "Lag spike", "No save point"],
+    powerUps: ["Mode Tryhard Activé", "CheatCode Débloqué", "Copier-coller Stack Overflow", "Assistant IA"],
+    explosionMessages: [
+      "Maman, encore 5 minutes !",
+      "Bug dans ton jeu",
+      "Patch sur la prochaine mise à jour.",
+      "GG, go next.",
+    ]
+  },
+  {
+    id: 2,
+    name: "The First Code",
+    description: "First internships, first failures, first contact with legacy code.",
+    obstacles: ["Unpaid internship", "Approaching deadline", "Spaghetti code", "Merge conflict", "Legacy code"],
+    powerUps: ["Mode Debug", "Nouveau Framework Hype", "Canard en Plastique", "Assistant IA"],
+    explosionMessages: [
+      "Corrigé en prod... enfin je crois.",
+      "Oublie pas le point-virgule.",
+      "Bienvenue dans Jira hell.",
+      "Ton pull request a été refusé.",
+      "Chez moi, ça marche."
+
+    ]
+  },
+  {
+    id: 3,
+    name: "Welcome to Adulthood",
+    description: "Working for real now, but it's not fun anymore.",
+    obstacles: ["Commute, work, sleep", "Annoying boss", "Useless meeting", "Technical debt"],
+    powerUps: ["Télétravail", "Café de l'Open-space", "Développeur Junior Motivé", "Assistant IA"],
+    explosionMessages: [
+      "Bienvenue dans le burn-out !",
+      "Déploiement raté, rollback en cours.",
+      "Ton manager te regarde d'un mauvais œil.",
+      "Ping-moi si urgent. (Tout est urgent.)",
+      "Prod en PLS",
+      "Dette technique",
+      "Réunion inutile évitée"
+    ]
+  },
+  {
+    id: 4,
+    name: "Life Strikes Back",
+    description: "No more fooling around, time to pay the bills.",
+    obstacles: ["Buying a house", "Planning a wedding", "Having kids", "Taxes"],
+    powerUps: ["Compte joint", "Les enfants chez Mamie", "Week-end en solo", "Assistant IA"],
+    explosionMessages: [
+      "Ton épargne vient de disparaître.",
+      "Tu dors plus, désolé.",
+      "Tes impôts pour payer leur resto",
+      "T'es responsable d'un mini-toi maintenant.",
+      "Félicitations, tu es devenu tes parents."
+    ]
+  },
+  {
+    id: 5,
+    name: "The Final Boss: Time",
+    description: "Too late to turn back, regrets are starting to pile up...",
+    obstacles: ["Midlife Crisis", "Not a minute to waste", "Failed retirement plan"],
+    powerUps: ["Retraite anticipée", "Vacances à la mer", "Assistant IA"],
+    explosionMessages: [
+      "Encore un jour de plus vers la retraite.",
+      "childhood.exe a cessé de fonctionner.",
+      "Crise existentielle en cours...",
+      "Pourquoi j'ai pas acheté du Bitcoin en 2010 ?",
+      "Crise de la quarantaine",
+      "Plus une minute à perdre",
+      "Plan retraite foireux"
+    ]
+  }
+];
+
+    // Power-up types
+    const POWER_UP_TYPES = [
+      // Level 1 power-ups
+      {
+        name: "Mode Gaming: ON",
+        color: [255, 0, 255],
+        size: 25,
+        duration: 8 * 60,
+        effect: function(ship) {
+          return {
+            onActivate: function() {
+              createTextParticle(ship.x, ship.y - 30, "MODE GAMING: ON!");
+              ship.speedBoost = 2;
+            },
+            onUpdate: function() {
+              if (frameCount % 10 === 0) {
+                bullets.push({
+                  x: ship.x,
+                  y: ship.y - 10,
+                  vx: 0,
+                  vy: -10,
+                  special: true
+                });
+              }
+            },
+            onDeactivate: function() {
+              ship.speedBoost = 1;
+              createTextParticle(ship.x, ship.y - 30, "Game Over!");
+            }
+          };
+        }
+      },
+      {
+        name: "Code de Triche Débloqué",
+        color: [255, 255, 0],
+        size: 25,
+        duration: 8 * 60,
+        effect: function(ship) {
+          return {
+            onActivate: function() {
+              createTextParticle(ship.x, ship.y - 30, "CODE DE TRICHE DÉBLOQUÉ!");
+            },
+            onUpdate: function() {
+              if (frameCount % 10 === 0) {
+                for (let angle = 0; angle < 360; angle += 45) {
+                  let rad = angle * Math.PI / 180;
+                  bullets.push({
+                    x: ship.x,
+                    y: ship.y,
+                    vx: Math.cos(rad) * 5,
+                    vy: Math.sin(rad) * 5,
+                    special: true
+                  });
+                }
+              }
+            }
+          };
+        }
+      },
+      {
+        name: "Copier-coller Stack Overflow",
+        color: [255, 165, 0],
+        size: 25,
+        duration: 1,
+        effect: function(ship) {
+          return {
+            onActivate: function() {
+              createTextParticle(ship.x, ship.y - 30, "COPIER-COLLER DE STACK OVERFLOW!");
+              for (let obstacle of obstacles) {
+                if (obstacle.y < canvas.height / 2) {
+                  createExplosion(obstacle.x, obstacle.y, obstacle.size, obstacle.color);
+                  score += Math.floor(obstacle.size);
+                }
+              }
+              obstacles = obstacles.filter(o => o.y >= canvas.height / 2);
+            }
+          };
+        }
+      },
+      
+      // New AI Assistant power-up
+      {
+        name: "Assistant IA",
+        color: [0, 200, 255],
+        size: 25,
+        duration: 10 * 60,
+        effect: function(ship) {
+          return {
+            onActivate: function() {
+              createTextParticle(ship.x, ship.y - 30, "ASSISTANT IA ACTIVÉ!");
+            },
+            onUpdate: function() {
+              // Find the closest obstacle
+              if (obstacles.length > 0 && frameCount % 15 === 0) {
+                let closestObstacle = null;
+                let minDistance = Infinity;
+                
+                for (let obstacle of obstacles) {
+                  const dx = obstacle.x - ship.x;
+                  const dy = obstacle.y - ship.y;
+                  const distance = Math.sqrt(dx * dx + dy * dy);
+                  
+                  if (distance < minDistance) {
+                    minDistance = distance;
+                    closestObstacle = obstacle;
+                  }
+                }
+                
+                if (closestObstacle) {
+                  // Calculate direction to the obstacle
+                  const dx = closestObstacle.x - ship.x;
+                  const dy = closestObstacle.y - ship.y;
+                  const angle = Math.atan2(dy, dx);
+                  
+                  // Create a special AI bullet
+                  bullets.push({
+                    x: ship.x,
+                    y: ship.y - 10,
+                    vx: Math.cos(angle) * 8,
+                    vy: Math.sin(angle) * 8,
+                    special: true,
+                    ai: true
+                  });
+                  
+                  // Visual effect
+                  createTextParticle(ship.x + 20, ship.y, "🤖", 20);
+                }
+              }
+            },
+            onDeactivate: function() {
+              createTextParticle(ship.x, ship.y - 30, "ASSISTANT IA HORS LIGNE");
+            }
+          };
+        }
+      },
+      
+      // Level 2 power-ups
+      {
+        name: "Mode Debug",
+        color: [255, 255, 0],
+        size: 25,
+        duration: 8 * 60,
+        effect: function(ship) {
+          return {
+            onActivate: function() {
+              createTextParticle(ship.x, ship.y - 30, "MODE DEBUG ACTIVÉ!");
+            },
+            onUpdate: function() {
+              if (frameCount % 10 === 0) {
+                for (let angle = 0; angle < 360; angle += 45) {
+                  let rad = angle * Math.PI / 180;
+                  bullets.push({
+                    x: ship.x,
+                    y: ship.y,
+                    vx: Math.cos(rad) * 5,
+                    vy: Math.sin(rad) * 5,
+                    special: true
+                  });
+                }
+              }
+            }
+          };
+        }
+      },
+      {
+        name: "Nouveau Framework Hype",
+        color: [0, 200, 255],
+        size: 25,
+        duration: 15 * 60,
+        effect: function(ship) {
+          return {
+            onActivate: function() {
+              createTextParticle(ship.x, ship.y - 30, "NOUVEAU FRAMEWORK HYPE!");
+              ship.speedBoost = 3;
+              ship.doubleDamage = true;
+            },
+            onUpdate: function() {
+              if (frameCount % 30 === 0) {
+                createTextParticle(ship.x, ship.y - 30, "Tellement productif!");
+              }
+            },
+            onDeactivate: function() {
+              ship.speedBoost = 1;
+              ship.doubleDamage = false;
+              createTextParticle(ship.x, ship.y - 30, "Framework abandonné!");
+            }
+          };
+        }
+      },
+      {
+        name: "Canard en Plastique",
+        color: [255, 255, 0],
+        size: 25,
+        duration: 10 * 60,
+        effect: function(ship) {
+          let duckX = ship.x + 30;
+          let duckY = ship.y;
+          
+          return {
+            onActivate: function() {
+              createTextParticle(ship.x, ship.y - 30, "CANARD EN PLASTIQUE ACTIVÉ!");
+            },
+            onUpdate: function() {
+              // Update duck position to follow player with slight delay
+              duckX += (ship.x + 30 - duckX) * 0.1;
+              duckY += (ship.y - duckY) * 0.1;
+              
+              // Duck shoots occasionally
+              if (frameCount % 15 === 0) {
+                bullets.push({
+                  x: duckX,
+                  y: duckY,
+                  vx: 0,
+                  vy: -8,
+                  special: true
+                });
+              }
+              
+              // Draw the duck
+              ctx.fillStyle = 'rgb(255, 255, 0)';
+              ctx.beginPath();
+              ctx.arc(duckX, duckY, 10, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.stroke();
+              
+              // Duck's bill
+              ctx.fillStyle = 'rgb(255, 165, 0)';
+              ctx.beginPath();
+              ctx.ellipse(duckX + 10, duckY, 5, 3, 0, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.stroke();
+            }
+          };
+        }
+      },
+      
+      // Level 3 power-ups
+      {
+        name: "Télétravail",
+        color: [100, 200, 255],
+        size: 25,
+        duration: 10 * 60,
+        effect: function(ship) {
+          return {
+            onActivate: function() {
+              createTextParticle(ship.x, ship.y - 30, "TÉLÉTRAVAIL ACTIVÉ!");
+              for (let obstacle of obstacles) {
+                obstacle.originalVx = obstacle.vx;
+                obstacle.originalVy = obstacle.vy;
+                obstacle.vx *= 0.3;
+                obstacle.vy *= 0.3;
+              }
+            },
+            onDeactivate: function() {
+              for (let obstacle of obstacles) {
+                if (obstacle.originalVx !== undefined) {
+                  obstacle.vx = obstacle.originalVx;
+                  obstacle.vy = obstacle.originalVy;
+                }
+              }
+              createTextParticle(ship.x, ship.y - 30, "Retour au bureau!");
+            }
+          };
+        }
+      },
+      {
+        name: "Café de l'Open-space",
+        color: [139, 69, 19],
+        size: 25,
+        duration: 10 * 60,
+        effect: function(ship) {
+          return {
+            onActivate: function() {
+              createTextParticle(ship.x, ship.y - 30, "BOOST DE CAFÉ!");
+              ship.speedBoost = 2;
+            },
+            onUpdate: function() {
+              if (keys[32] && frameCount % 5 === 0) {
+                bullets.push({
+                  x: ship.x,
+                  y: ship.y - 10,
+                  vx: 0,
+                  vy: -12,
+                  special: true
+                });
+              }
+            },
+            onDeactivate: function() {
+              ship.speedBoost = 1;
+              createTextParticle(ship.x, ship.y - 30, "Coffee crash!");
+            }
+          };
+        }
+      },
+      {
+        name: "AI Pair Programming",
+        color: [150, 0, 255],
+        size: 25,
+        duration: 15 * 60,
+        effect: function(ship) {
+          return {
+            onActivate: function() {
+              createTextParticle(ship.x, ship.y - 30, "AI PAIR PROGRAMMING!");
+              ship.doubleDamage = true;
+            },
+            onUpdate: function() {
+              // AI shoots automatically at nearest obstacle
+              if (frameCount % 20 === 0 && obstacles.length > 0) {
+                // Find closest obstacle
+                let closestDist = Infinity;
+                let closestObstacle = null;
+                
+                for (let obstacle of obstacles) {
+                  let dist = Math.sqrt(Math.pow(ship.x - obstacle.x, 2) + Math.pow(ship.y - obstacle.y, 2));
+                  if (dist < closestDist) {
+                    closestDist = dist;
+                    closestObstacle = obstacle;
+                  }
+                }
+                
+                if (closestObstacle) {
+                  // Calculate direction to obstacle
+                  let dx = closestObstacle.x - ship.x;
+                  let dy = closestObstacle.y - ship.y;
+                  let dist = Math.sqrt(dx * dx + dy * dy);
+                  
+                  // Normalize and set velocity
+                  let vx = dx / dist * 10;
+                  let vy = dy / dist * 10;
+                  
+                  bullets.push({
+                    x: ship.x,
+                    y: ship.y,
+                    vx: vx,
+                    vy: vy,
+                    special: true
+                  });
+                }
+              }
+            },
+            onDeactivate: function() {
+              ship.doubleDamage = false;
+              createTextParticle(ship.x, ship.y - 30, "AI subscription ended!");
+            }
+          };
+        }
+      },
+      
+      // Level 4 power-ups
+      {
+        name: "Joint Bank Account Shield",
+        color: [0, 200, 100],
+        size: 25,
+        duration: 8 * 60,
+        effect: function(ship) {
+          return {
+            onActivate: function() {
+              createTextParticle(ship.x, ship.y - 30, "FINANCIAL SHIELD ACTIVATED!");
+              ship.shield = true;
+            },
+            onUpdate: function() {
+              // Draw shield
+              ctx.strokeStyle = 'rgba(0, 200, 100, 0.7)';
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.arc(ship.x, ship.y, 25, 0, Math.PI * 2);
+              ctx.stroke();
+            },
+            onDeactivate: function() {
+              ship.shield = false;
+              createTextParticle(ship.x, ship.y - 30, "Account overdrawn!");
+            }
+          };
+        }
+      },
+      {
+        name: "Daycare Time",
+        color: [255, 100, 255],
+        size: 25,
+        duration: 10 * 60,
+        effect: function(ship) {
+          return {
+            onActivate: function() {
+              createTextParticle(ship.x, ship.y - 30, "KIDS AT DAYCARE!");
+              for (let obstacle of obstacles) {
+                obstacle.originalVx = obstacle.vx;
+                obstacle.originalVy = obstacle.vy;
+                obstacle.vx *= 0.2;
+                obstacle.vy *= 0.2;
+              }
+            },
+            onDeactivate: function() {
+              for (let obstacle of obstacles) {
+                if (obstacle.originalVx !== undefined) {
+                  obstacle.vx = obstacle.originalVx;
+                  obstacle.vy = obstacle.originalVy;
+                }
+              }
+              createTextParticle(ship.x, ship.y - 30, "Daycare closed!");
+            }
+          };
+        }
+      },
+      {
+        name: "One Free Weekend",
+        color: [0, 255, 255],
+        size: 25,
+        duration: 1,
+        effect: function(ship) {
+          return {
+            onActivate: function() {
+              createTextParticle(ship.x, ship.y - 30, "FREE WEEKEND!");
+              for (let obstacle of obstacles) {
+                createExplosion(obstacle.x, obstacle.y, obstacle.size, obstacle.color);
+                score += Math.floor(obstacle.size);
+              }
+              obstacles = [];
+            }
+          };
+        }
+      },
+      
+      // Level 5 power-ups
+      {
+        name: "Retraite anticipée",
+        color: [255, 215, 0],
+        size: 25,
+        duration: 1,
+        effect: function(ship) {
+          return {
+            onActivate: function() {
+              createTextParticle(ship.x, ship.y - 30, "RETRAITE ANTICIPÉE!");
+              for (let obstacle of obstacles) {
+                createExplosion(obstacle.x, obstacle.y, obstacle.size, obstacle.color);
+                score += Math.floor(obstacle.size * 2);
+              }
+              obstacles = [];
+              
+              // Bonus score
+              score += 500;
+            }
+          };
+        }
+      },
+      {
+        name: "Vacances à la mer",
+        color: [200, 200, 255],
+        size: 25,
+        duration: 15 * 60,
+        effect: function(ship) {
+          return {
+            onActivate: function() {
+              createTextParticle(ship.x, ship.y - 30, "VACANCES À LA MER!");
+              ship.doubleDamage = true;
+              
+              // Slow down all obstacles
+              for (let obstacle of obstacles) {
+                obstacle.originalVx = obstacle.vx;
+                obstacle.originalVy = obstacle.vy;
+                obstacle.vx *= 0.1;
+                obstacle.vy *= 0.1;
+              }
+            },
+            onUpdate: function() {
+              // Slow down any new obstacles
+              for (let obstacle of obstacles) {
+                if (obstacle.originalVx === undefined) {
+                  obstacle.originalVx = obstacle.vx;
+                  obstacle.originalVy = obstacle.vy;
+                  obstacle.vx *= 0.1;
+                  obstacle.vy *= 0.1;
+                }
+              }
+            },
+            onDeactivate: function() {
+              ship.doubleDamage = false;
+              
+              // Return obstacles to normal speed
+              for (let obstacle of obstacles) {
+                if (obstacle.originalVx !== undefined) {
+                  obstacle.vx = obstacle.originalVx;
+                  obstacle.vy = obstacle.originalVy;
+                }
+              }
+              createTextParticle(ship.x, ship.y - 30, "Retour au travail!");
+            }
+          };
+        }
+      },
+      {
+        name: "Weekend Mode",
+        color: [0, 191, 255],
+        size: 25,
+        duration: 10 * 60,
+        effect: function(ship) {
+          return {
+            onActivate: function() {
+              createTextParticle(ship.x, ship.y - 30, "WEEKEND MODE!");
+              for (let obstacle of obstacles) {
+                obstacle.originalVx = obstacle.vx;
+                obstacle.originalVy = obstacle.vy;
+                obstacle.vx *= 0.3;
+                obstacle.vy *= 0.3;
+              }
+            },
+            onDeactivate: function() {
+              for (let obstacle of obstacles) {
+                if (obstacle.originalVx !== undefined) {
+                  obstacle.vx = obstacle.originalVx;
+                  obstacle.vy = obstacle.originalVy;
+                }
+              }
+            }
+          };
+        }
+      },
+      {
+        name: "Compte joint",
+        color: [0, 200, 100],
+        size: 25,
+        duration: 10 * 60,
+        effect: function(ship) {
+          return {
+            onActivate: function() {
+              createTextParticle(ship.x, ship.y - 30, "BOUCLIER FINANCIER ACTIVÉ!");
+              ship.shield = true;
+            },
+            onUpdate: function() {
+              // Draw shield
+              ctx.strokeStyle = 'rgba(0, 200, 100, 0.7)';
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.arc(ship.x, ship.y, 25, 0, Math.PI * 2);
+              ctx.stroke();
+            },
+            onDeactivate: function() {
+              ship.shield = false;
+              createTextParticle(ship.x, ship.y - 30, "Compte à découvert!");
+            }
+          };
+        }
+      },
+      {
+        name: "Les enfants chez Mamie",
+        color: [255, 100, 255],
+        size: 25,
+        duration: 10 * 60,
+        effect: function(ship) {
+          return {
+            onActivate: function() {
+              createTextParticle(ship.x, ship.y - 30, "ENFANTS CHEZ MAMIE!");
+              for (let obstacle of obstacles) {
+                obstacle.originalVx = obstacle.vx;
+                obstacle.originalVy = obstacle.vy;
+                obstacle.vx *= 0.2;
+                obstacle.vy *= 0.2;
+              }
+            },
+            onDeactivate: function() {
+              for (let obstacle of obstacles) {
+                if (obstacle.originalVx !== undefined) {
+                  obstacle.vx = obstacle.originalVx;
+                  obstacle.vy = obstacle.originalVy;
+                }
+              }
+              createTextParticle(ship.x, ship.y - 30, "Mamie a ramené les enfants!");
+            }
+          };
+        }
+      },
+      {
+        name: "Week-end en solo",
+        color: [0, 255, 255],
+        size: 25,
+        duration: 1,
+        effect: function(ship) {
+          return {
+            onActivate: function() {
+              createTextParticle(ship.x, ship.y - 30, "WEEK-END EN SOLO!");
+              for (let obstacle of obstacles) {
+                createExplosion(obstacle.x, obstacle.y, obstacle.size, obstacle.color);
+                score += Math.floor(obstacle.size);
+              }
+              obstacles = [];
+            }
+          };
+        }
+      }
+    ];
+    
+    // Obstacle types with funny texts
+    const OBSTACLE_TYPES = [
+      // Level 1: The Nerd Awakens
+      { 
+        name: "Homework Comet", 
+        size: 40, 
+        color: [200, 200, 100], 
+        health: 2,
+        texts: []
+      },
+      { 
+        name: "Mom Unplugging WiFi", 
+        size: 35, 
+        color: [255, 100, 100], 
+        health: 1,
+        texts: []
+      },
+      { 
+        name: "Lag Spike", 
+        size: 25, 
+        color: [255, 0, 0], 
+        health: 1,
+        texts: []
+      },
+      { 
+        name: "Git Push -f Accident", 
+        size: 45, 
+        color: [150, 75, 0], 
+        health: 2,
+        texts: []
+      },
+      { 
+        name: "Spaghetti Code Monster", 
+        size: 50, 
+        color: [255, 165, 0], 
+        health: 3,
+        texts: []
+      },
+      
+      // Level 2: The First Code
+      { 
+        name: "Unpaid Internship", 
+        size: 40, 
+        color: [100, 100, 100], 
+        health: 2,
+        texts: []
+      },
+      { 
+        name: "Deadline Meteor", 
+        size: 45, 
+        color: [255, 0, 0], 
+        health: 2,
+        texts: []
+      },
+      { 
+        name: "Technical Debt Satellite", 
+        size: 50, 
+        color: [150, 75, 75], 
+        health: 3,
+        texts: []
+      },
+      { 
+        name: "Merge Conflict Drone", 
+        size: 30, 
+        color: [150, 0, 255], 
+        health: 1,
+        texts: []
+      },
+      { 
+        name: "Legacy Code Wormhole", 
+        size: 50, 
+        color: [100, 100, 100], 
+        health: 3,
+        texts: []
+      },
+      
+      // Level 3: Welcome to Adulthood
+      { 
+        name: "9 to 5 Comet", 
+        size: 40, 
+        color: [100, 100, 150], 
+        health: 2,
+        texts: []
+      },
+      { 
+        name: "Micromanaging Boss Ship", 
+        size: 45, 
+        color: [200, 0, 0], 
+        health: 2,
+        texts: []
+      },
+      { 
+        name: "Infinite Meetings", 
+        size: 35, 
+        color: [150, 150, 150], 
+        health: 2,
+        texts: []
+      },
+      { 
+        name: "Prod Outage Satellite", 
+        size: 50, 
+        color: [255, 100, 0], 
+        health: 3,
+        texts: []
+      },
+      
+      // Level 4: The Boss Fight: Life Itself
+      { 
+        name: "Getting a Mortgage", 
+        size: 55, 
+        color: [100, 100, 100], 
+        health: 3,
+        texts: []
+      },
+      { 
+        name: "Wedding Planner UFO", 
+        size: 40, 
+        color: [255, 192, 203], 
+        health: 2,
+        texts: []
+      },
+      { 
+        name: "Parenthood Debris", 
+        size: 45, 
+        color: [0, 100, 255], 
+        health: 2,
+        texts: []
+      },
+      { 
+        name: "Taxes Black Hole", 
+        size: 50, 
+        color: [50, 50, 50], 
+        health: 3,
+        texts: []
+      },
+      
+      // Level 5: The Final Boss: Time
+      { 
+        name: "Midlife Crisis Meteor", 
+        size: 50, 
+        color: [255, 0, 100], 
+        health: 2,
+        texts: []
+      },
+      { 
+        name: "No Time Left", 
+        size: 45, 
+        color: [200, 200, 200], 
+        health: 1,
+        texts: []
+      },
+      { 
+        name: "Retirement Fund Gone", 
+        size: 55, 
+        color: [100, 0, 0], 
+        health: 2,
+        texts: []
+      }
+    ];
+    
+    // Mini-Boss definitions for each level
+    const MINI_BOSSES = [
+      // Level 1: L'Éveil du Nerd
+      {
+        name: "Addiction aux Jeux Vidéo",
+        description: "Ton premier vrai défi : équilibrer le gaming avec la vraie vie !",
+        health: 20,
+        size: 70,
+        color: [255, 50, 50],
+        speed: 2,
+        shootInterval: 90,
+        attackMessages: [
+          "Encore une partie !",
+          "Dormir c'est pour les faibles !",
+          "Je ferai mes devoirs plus tard !",
+          "5 minutes de plus, Maman !"
+        ]
+      },
+      // Level 2: Le Premier Code
+      {
+        name: "Syndrome de l'Imposteur",
+        description: "Tout le monde semble en savoir plus que toi. Es-tu vraiment développeur ?",
+        health: 30,
+        size: 75,
+        color: [100, 100, 255],
+        speed: 2.5,
+        shootInterval: 80,
+        attackMessages: [
+          "Ils vont découvrir que je suis un imposteur !",
+          "Stack Overflow est mon vrai CV !",
+          "Je n'ai pas ma place ici !",
+          "Tout le monde en sait plus que moi !"
+        ]
+      },
+      // Level 3: Bienvenue dans l'Âge Adulte
+      {
+        name: "Burn-out",
+        description: "Le rythme implacable de la vie adulte te rattrape.",
+        health: 40,
+        size: 80,
+        color: [255, 100, 0],
+        speed: 3,
+        shootInterval: 70,
+        attackMessages: [
+          "Pas d'équilibre vie pro/perso !",
+          "Besoin de plus de café !",
+          "Les emails n'arrêtent jamais !",
+          "Week-end ? C'est quoi ça ?"
+        ]
+      },
+      // Level 4: La Vie Contre-Attaque
+      {
+        name: "Crédit & Factures",
+        description: "Le monstre ultime des responsabilités adultes.",
+        health: 50,
+        size: 85,
+        color: [50, 200, 50],
+        speed: 3.5,
+        shootInterval: 60,
+        attackMessages: [
+          "Ton score de crédit chute !",
+          "Attaque de factures !",
+          "Augmentation des impôts fonciers !",
+          "Réparations imprévues !"
+        ]
+      },
+      // Level 5: Le Boss Final : Le Temps
+      {
+        name: "Crise de la Quarantaine",
+        description: "Où est passé tout ce temps ? Qu'as-tu accompli ?",
+        health: 60,
+        size: 90,
+        color: [200, 0, 200],
+        speed: 4,
+        shootInterval: 50,
+        attackMessages: [
+          "La jeunesse est partie pour toujours !",
+          "Qu'ai-je fait de ma vie ?",
+          "Le temps n'attend personne !",
+          "C'est tout ce qu'il y a ?"
+        ]
+      }
+    ];
+    
+    // Pop culture reference texts
+    const POP_CULTURE_TEXTS = [
+      "Ce n'est pas une lune...",
+      "C'est fini Anakin, j'ai le terrain surélevé !",
+      "Force Quitter activé.",
+      "Fais un tonneau !",
+      "Appuie sur F pour rendre hommage.",
+      "Succès débloqué !",
+      "GG, pas de revanche.",
+      "Nerf ça !"
+    ];
+    
+    // Initialize game
+    function init() {
+      // Set up event listeners
+      startButton.addEventListener('click', startGame);
+      restartButton.addEventListener('click', restartGame);
+      continueButton.addEventListener('click', continueGame);
+      continueFromLevelButton.addEventListener('click', function() {
+        // Double vérification que l'email a été soumis
+        if (localStorage.getItem('emailSubmitted') === 'true') {
+          continueFromCurrentLevel();
+        } else {
+          emailMessage.textContent = "Please submit your email first!";
+          emailMessage.style.color = "#ff0000";
+          // S'assurer que le bouton est désactivé
+          continueFromLevelButton.disabled = true;
+        }
+      });
+      submitEmailButton.addEventListener('click', submitEmail);
+      unlockSuperPowersButton.addEventListener('click', function() {
+        window.open('https://florentthurin.com/', '_blank');
+      });
+      continuePlayingButton.addEventListener('click', continuePlaying);
+      
+      // Prevent default form submission
+      document.addEventListener('submit', function(e) {
+        e.preventDefault();
+      });
+      
+      // Prevent space from triggering buttons when game is running
+      document.addEventListener('click', function(e) {
+        if (gameRunning && e.target.tagName === 'BUTTON' && e.detail === 0) {
+          // This is likely a space-triggered click
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      }, true);
+      
+      // Keyboard event listeners
+      window.addEventListener('keydown', function(e) {
+        keys[e.keyCode] = true;
+        
+        // Prevent space from scrolling or submitting forms
+        if (e.keyCode === 32) {
+          e.preventDefault();
+        }
+      });
+      
+      window.addEventListener('keyup', function(e) {
+        keys[e.keyCode] = false;
+        
+        // Prevent space from triggering button clicks or form submissions
+        if (e.keyCode === 32) {
+          e.preventDefault();
+        }
+      });
+      
+      // Generate stars for background - more stars for larger canvas
+      for (let i = 0; i < 200; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 2 + 1
+        });
+      }
+      
+      resetGame();
+    }
+    
+    function resetGame() {
+      ship = {
+        x: canvas.width / 2,
+        y: canvas.height - 50,
+        speedBoost: 1,
+        doubleDamage: false
+      };
+      bullets = [];
+      obstacles = [];
+      particles = [];
+      textParticles = [];
+      powerUps = [];
+      activePowerUps = {};
+      miniBoss = null;
+      bossDefeated = false;
+      
+      // Only reset score when starting a new game, not when leveling up
+      if (currentLevel === 1) {
+        score = 0;
+      }
+      
+      frameCount = 0;
+      
+      // Update level display
+      document.getElementById('currentLevel').textContent = currentLevel;
+      document.getElementById('levelName').textContent = LEVELS[currentLevel - 1].name;
+      
+      // Hide game over screen
+      document.getElementById('gameOver').style.display = 'none';
+      document.getElementById('levelUp').style.display = 'none';
+      document.getElementById('endScreen').style.display = 'none';
+      
+      // Reset email form
+      emailMessage.textContent = "";
+      submitEmailButton.disabled = false;
+    }
+    
+    function startGame() {
+      resetGame();
+      gameRunning = true;
+      requestAnimationFrame(gameLoop);
+    }
+    
+    function gameOver() {
+      gameRunning = false;
+      document.getElementById('finalScore').textContent = score;
+      document.getElementById('gameOver').style.display = 'flex';
+      
+      // Update current level display in game over screen
+      document.getElementById('currentLevelGameOver').textContent = currentLevel;
+      
+      // Toujours désactiver le bouton continue au début
+      continueFromLevelButton.disabled = true;
+      
+      // Load saved email if available
+      const savedEmail = localStorage.getItem('playerEmail');
+      if (savedEmail) {
+        leaderboardEmail.value = savedEmail;
+        
+        // Vérifier si l'email a été soumis pour cette session de jeu
+        if (localStorage.getItem('emailSubmitted') === 'true') {
+          // Activer le bouton uniquement si l'email a été soumis
+          continueFromLevelButton.disabled = false;
+        }
+      }
+    }
+    
+    function restartGame() {
+      document.getElementById('gameOver').style.display = 'none';
+      currentLevel = 1;
+      scoreForNextLevel = 1000;
+      startGame();
+    }
+    
+    function continueFromCurrentLevel() {
+      // Vérifier si l'email a été soumis
+      if (localStorage.getItem('emailSubmitted') !== 'true') {
+        // Si pas d'email soumis, afficher un message et ne pas continuer
+        emailMessage.textContent = "Please submit your email first!";
+        emailMessage.style.color = "#ff0000";
+        return;
+      }
+      
+      document.getElementById('gameOver').style.display = 'none';
+      // Keep the current level, just reset the game state
+      startGame();
+    }
+    
+    function continueGame() {
+      document.getElementById('levelUp').style.display = 'none';
+      startGame();
+    }
+    
+    function submitEmail() {
+      const email = leaderboardEmail.value.trim();
+      
+      // Simple email validation
+      if (!email || !email.includes('@') || !email.includes('.')) {
+        emailMessage.textContent = "Please enter a valid email address.";
+        emailMessage.style.color = "#ff0000";
+        return;
+      }
+      
+      // Show loading state
+      emailMessage.textContent = "Saving score...";
+      emailMessage.style.color = "#ffff00";
+      submitEmailButton.disabled = true;
+      
+      // Sauvegarder le score (maintenant toujours synchrone grâce à notre file d'attente)
+      window.saveScore(email, score, currentLevel);
+      
+      // Afficher immédiatement un message de succès
+      emailMessage.textContent = "Score saved successfully! Thanks for playing!";
+      emailMessage.style.color = "#0f0";
+      
+      // Enable the continue from level button
+      continueFromLevelButton.disabled = false;
+      
+      // Save email in localStorage for convenience
+      localStorage.setItem('playerEmail', email);
+      localStorage.setItem('emailSubmitted', 'true');
+      
+      if (DEBUG) console.log(`Score saved for ${email} at level ${currentLevel}`);
+    }
+    
+    function levelUp() {
+      gameRunning = false;
+      
+      // Check if we're at the last level
+      if (currentLevel >= LEVELS.length) {
+        // Show end screen instead of level up
+        showEndScreen();
+        return;
+      }
+      
+      // Update level up screen
+      document.getElementById('newLevel').textContent = currentLevel + 1;
+      document.getElementById('newLevelName').textContent = LEVELS[currentLevel].name;
+      document.getElementById('levelDescription').textContent = LEVELS[currentLevel].description;
+      
+      // Show level up screen
+      document.getElementById('levelUp').style.display = 'flex';
+      
+      // Prepare for next level
+      currentLevel++;
+      scoreForNextLevel = Math.floor(scoreForNextLevel * levelMultiplier);
+      
+      // Reset boss state for the new level
+      bossDefeated = false;
+    }
+    
+    // Game loop
+    function gameLoop() {
+      frameCount++;
+      update();
+      draw();
+      
+      if (gameRunning) {
+        requestAnimationFrame(gameLoop);
+      }
+    }
+    
+    // Update game state
+    function update() {
+      if (!gameRunning) return;
+      
+      // Move ship based on key presses
+      if (keys.ArrowLeft && ship.x > ship.size / 2) ship.x -= ship.speed;
+      if (keys.ArrowRight && ship.x < canvas.width - ship.size / 2) ship.x += ship.speed;
+      if (keys.ArrowUp && ship.y > ship.size / 2) ship.y -= ship.speed;
+      if (keys.ArrowDown && ship.y < canvas.height - ship.size / 2) ship.y += ship.speed;
+      
+      // Check for level up (only if not at max level and boss is defeated)
+      if (score >= scoreForNextLevel && currentLevel < LEVELS.length && bossDefeated) {
+        levelUp();
+        return; // Skip the rest of the update after level up
+      } else if (score >= scoreForNextLevel && currentLevel < LEVELS.length && !bossDefeated && !miniBoss) {
+        // If player has enough score but hasn't defeated the boss yet, and the boss isn't spawned
+        // Force spawn the boss if it's not already present
+        if (frameCount % 60 === 0) { // Show reminder message once per second
+          createTextParticle(canvas.width / 2, canvas.height / 2, "Defeat the boss to advance!");
+        }
+        
+        // Make sure the boss is spawned
+        if (!miniBoss) {
+          if (DEBUG) console.log("Forcing boss spawn to complete level");
+          spawnMiniBoss(true); // Force spawn the boss
+        }
+      }
+      
+      // Check for game completion
+      checkGameCompletion();
+      
+      // Spawn mini-boss when reaching a percentage of the score needed for next level
+      // Use a higher threshold for higher levels to give players more time
+      let bossSpawnThreshold;
+      if (currentLevel === 1) {
+        bossSpawnThreshold = 0.5; // 50% for level 1
+      } else if (currentLevel === 2) {
+        bossSpawnThreshold = 0.8; // 80% for level 2 (was 65%)
+      } else {
+        bossSpawnThreshold = 0.85; // 85% for level 3 and above (was 75%)
+      }
+      
+      // Debug log to track score and level progression
+      if (DEBUG && frameCount % 60 === 0) { // Log once per second
+        console.log(`Level: ${currentLevel}, Score: ${score}, Next Level: ${scoreForNextLevel}, Boss at: ${scoreForNextLevel * bossSpawnThreshold}`);
+      }
+      
+      if (!miniBoss && !bossDefeated && score >= scoreForNextLevel * bossSpawnThreshold) {
+        if (DEBUG) console.log(`Spawning boss for level ${currentLevel}. Score: ${score}, Required: ${scoreForNextLevel * bossSpawnThreshold}`);
+        spawnMiniBoss(false); // Normal spawn, not forced
+      }
+      
+      // Handle player input
+      let moveSpeed = 5 * ship.speedBoost;
+      
+      if (keys[37] && ship.x > 15) { // Left arrow
+        ship.x -= moveSpeed;
+      }
+      if (keys[39] && ship.x < canvas.width - 15) { // Right arrow
+        ship.x += moveSpeed;
+      }
+      if (keys[38] && ship.y > 15) { // Up arrow
+        ship.y -= moveSpeed;
+      }
+      if (keys[40] && ship.y < canvas.height - 15) { // Down arrow
+        ship.y += moveSpeed;
+      }
+      
+      // Regular shooting
+      if (keys[32] && frameCount % 10 === 0 && !activePowerUps["Coffee Boost"]) { // Space bar
+        bullets.push({
+          x: ship.x,
+          y: ship.y - 10,
+          vx: 0,
+          vy: -8
+        });
+      }
+      
+      // Update mini-boss if active
+      if (miniBoss) {
+        miniBoss.update();
+      }
+      
+      // Update power-ups
+      if (frameCount % 300 === 0 && Math.random() < 0.7) {
+        createPowerUp();
+      }
+      
+      for (let i = powerUps.length - 1; i >= 0; i--) {
+        let powerUp = powerUps[i];
+        powerUp.y += 1;
+        
+        if (powerUp.y > canvas.height + 50) {
+          powerUps.splice(i, 1);
+          continue;
+        }
+        
+        // Check for collision with player
+        let d = Math.sqrt(Math.pow(ship.x - powerUp.x, 2) + Math.pow(ship.y - powerUp.y, 2));
+        if (d < powerUp.size / 2 + 15) {
+          activatePowerUp(powerUp);
+          powerUps.splice(i, 1);
+        }
+      }
+      
+      // Update active power-ups
+      for (let name in activePowerUps) {
+        let powerUp = activePowerUps[name];
+        
+        // Update timer
+        powerUp.timer--;
+        
+        // Call update function
+        if (powerUp.instance && powerUp.instance.onUpdate) {
+          powerUp.instance.onUpdate();
+        }
+        
+        // Deactivate if timer expired
+        if (powerUp.timer <= 0) {
+          if (powerUp.instance && powerUp.instance.onDeactivate) {
+            powerUp.instance.onDeactivate();
+          }
+          delete activePowerUps[name];
+        }
+      }
+      
+      // Create obstacles
+      // Frequency increases with level (60 frames at level 1, 50 at level 2, etc.)
+      let obstacleFrequency = Math.max(20, 60 - (currentLevel - 1) * 10);
+      if (frameCount % obstacleFrequency === 0) {
+        createObstacle();
+      }
+      
+      // Update obstacles
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        let obstacle = obstacles[i];
+        
+        obstacle.x += obstacle.vx;
+        obstacle.y += obstacle.vy;
+        
+        // Check if obstacle is off-screen
+        if (obstacle.x < -50 || obstacle.x > canvas.width + 50 || 
+            obstacle.y < -50 || obstacle.y > canvas.height + 50) {
+          obstacles.splice(i, 1);
+          continue;
+        }
+        
+        // Check for collision with player
+        let d = Math.sqrt(Math.pow(ship.x - obstacle.x, 2) + Math.pow(ship.y - obstacle.y, 2));
+        if (d < obstacle.size / 2 + 10) {
+          gameOver();
+          return;
+        }
+      }
+      
+      // Update bullets
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        let bullet = bullets[i];
+        
+        // Update position
+        if (bullet.vx !== undefined) {
+          bullet.x += bullet.vx;
+          bullet.y += bullet.vy;
+        } else {
+          bullet.y += bullet.vy;
+        }
+        
+        // Remove bullets that are off-screen
+        if (bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0 || bullet.y > canvas.height) {
+          bullets.splice(i, 1);
+          continue;
+        }
+        
+        // Skip collision checks for boss bullets
+        if (bullet.fromBoss) {
+          // Check for collision with player
+          let d = Math.sqrt(Math.pow(ship.x - bullet.x, 2) + Math.pow(ship.y - bullet.y, 2));
+          if (d < 15) {
+            // Player hit by boss bullet
+            if (!ship.shield) { // Shield protects from boss bullets
+              gameOver();
+              return;
+            } else {
+              // Shield absorbs the hit
+              bullets.splice(i, 1);
+              createTextParticle(ship.x, ship.y, "SHIELD BLOCKED!");
+              continue;
+            }
+          }
+          continue;
+        }
+        
+        // Check for collisions with mini-boss
+        if (miniBoss) {
+          let d = Math.sqrt(Math.pow(bullet.x - miniBoss.x, 2) + Math.pow(bullet.y - miniBoss.y, 2));
+          if (d < miniBoss.size / 2) {
+            // Calculate damage
+            let damage = ship.doubleDamage ? 2 : 1;
+            miniBoss.takeDamage(damage);
+            
+            // Remove bullet
+            bullets.splice(i, 1);
+            continue;
+          }
+        }
+        
+        // Check for collisions with obstacles
+        let hitObstacle = false;
+        for (let j = obstacles.length - 1; j >= 0; j--) {
+          let obstacle = obstacles[j];
+          let d = Math.sqrt(Math.pow(bullet.x - obstacle.x, 2) + Math.pow(bullet.y - obstacle.y, 2));
+          
+          if (d < obstacle.size / 2) {
+            // Calculate damage
+            let damage = ship.doubleDamage ? 2 : 1;
+            obstacle.health -= damage;
+            
+            // Remove bullet
+            bullets.splice(i, 1);
+            hitObstacle = true;
+            
+            // If obstacle is destroyed
+            if (obstacle.health <= 0) {
+              // Create explosion
+              createExplosion(obstacle.x, obstacle.y, obstacle.size, obstacle.color);
+              
+              // Show text
+              if (Math.random() < 0.2) { // 20% chance for pop culture reference
+                let text = POP_CULTURE_TEXTS[Math.floor(Math.random() * POP_CULTURE_TEXTS.length)];
+                createTextParticle(obstacle.x, obstacle.y, text);
+              } else if (obstacle.texts && obstacle.texts.length > 0) {
+                let text = obstacle.texts[Math.floor(Math.random() * obstacle.texts.length)];
+                createTextParticle(obstacle.x, obstacle.y, text);
+              } else {
+                // Use level-specific explosion messages
+                let currentLevelData = LEVELS[currentLevel - 1];
+                if (currentLevelData && currentLevelData.explosionMessages) {
+                  let text = currentLevelData.explosionMessages[Math.floor(Math.random() * currentLevelData.explosionMessages.length)];
+                  createTextParticle(obstacle.x, obstacle.y, text);
+                }
+              }
+              
+              // Add score
+              score += Math.floor(obstacle.size * 1.5);
+              
+              // Remove obstacle
+              obstacles.splice(j, 1);
+            }
+            
+            break;
+          }
+        }
+        
+        if (hitObstacle) continue;
+      }
+      
+      // Update particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i];
+        
+        if (p.isShockwave) {
+          p.radius += (p.maxRadius - p.radius) * 0.2;
+        } else {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vx *= 0.98;
+          p.vy *= 0.98;
+        }
+        
+        p.life--;
+        
+        if (p.life <= 0) {
+          particles.splice(i, 1);
+        }
+      }
+      
+      // Update text particles
+      for (let i = textParticles.length - 1; i >= 0; i--) {
+        let t = textParticles[i];
+        t.y -= 1;
+        t.life--;
+        
+        if (t.life <= 0) {
+          textParticles.splice(i, 1);
+        }
+      }
+    }
+    
+    // Draw game
+    function draw() {
+      // Clear canvas
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw stars
+      ctx.fillStyle = '#fff';
+      for (let star of stars) {
+        ctx.fillRect(star.x, star.y, star.size, star.size);
+      }
+      
+      // Draw obstacles
+      for (let obstacle of obstacles) {
+        ctx.fillStyle = `rgb(${obstacle.color[0]}, ${obstacle.color[1]}, ${obstacle.color[2]})`;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1;
+        
+        // Draw different shapes based on obstacle type
+        if (obstacle.name.includes("Homework") || obstacle.name.includes("Technical Debt")) {
+          // Draw a paper/document shape
+          ctx.save();
+          ctx.translate(obstacle.x, obstacle.y);
+          ctx.rotate(frameCount * 0.01);
+          
+          // Paper
+          ctx.fillRect(-obstacle.size/2, -obstacle.size/2, obstacle.size, obstacle.size);
+          
+          // Lines of text
+          ctx.strokeStyle = '#000';
+          for (let i = 0; i < 5; i++) {
+            ctx.beginPath();
+            ctx.moveTo(-obstacle.size/2 + 5, -obstacle.size/3 + i * 10);
+            ctx.lineTo(obstacle.size/2 - 5, -obstacle.size/3 + i * 10);
+            ctx.stroke();
+          }
+          
+          ctx.restore();
+        } 
+        else if (obstacle.name.includes("Mom") || obstacle.name.includes("Boss")) {
+          // Draw an angry face
+          ctx.save();
+          ctx.translate(obstacle.x, obstacle.y);
+          
+          // Head
+          ctx.beginPath();
+          ctx.arc(0, 0, obstacle.size/2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          
+          // Angry eyes
+          ctx.strokeStyle = '#000';
+          ctx.lineWidth = 2;
+          
+          // Left eye
+          ctx.beginPath();
+          ctx.moveTo(-obstacle.size/4 - 5, -obstacle.size/6 - 5);
+          ctx.lineTo(-obstacle.size/4 + 5, -obstacle.size/6 + 5);
+          ctx.stroke();
+          
+          ctx.beginPath();
+          ctx.moveTo(-obstacle.size/4 - 5, -obstacle.size/6 + 5);
+          ctx.lineTo(-obstacle.size/4 + 5, -obstacle.size/6 - 5);
+          ctx.stroke();
+          
+          // Right eye
+          ctx.beginPath();
+          ctx.moveTo(obstacle.size/4 - 5, -obstacle.size/6 - 5);
+          ctx.lineTo(obstacle.size/4 + 5, -obstacle.size/6 + 5);
+          ctx.stroke();
+          
+          ctx.beginPath();
+          ctx.moveTo(obstacle.size/4 - 5, -obstacle.size/6 + 5);
+          ctx.lineTo(obstacle.size/4 + 5, -obstacle.size/6 - 5);
+          ctx.stroke();
+          
+          // Angry mouth
+          ctx.beginPath();
+          ctx.arc(0, obstacle.size/4, obstacle.size/4, 0, Math.PI, false);
+          ctx.stroke();
+          
+          ctx.restore();
+        }
+        else if (obstacle.name.includes("Lag") || obstacle.name.includes("Git")) {
+          // Error symbol
+          ctx.save();
+          ctx.translate(obstacle.x, obstacle.y);
+          ctx.rotate(frameCount * 0.02);
+          
+          // Warning triangle
+          ctx.beginPath();
+          ctx.moveTo(0, -obstacle.size/2);
+          ctx.lineTo(-obstacle.size/2, obstacle.size/2);
+          ctx.lineTo(obstacle.size/2, obstacle.size/2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          
+          // Exclamation mark
+          ctx.fillStyle = '#000';
+          ctx.beginPath();
+          ctx.arc(0, obstacle.size/4, obstacle.size/10, 0, Math.PI * 2);
+          ctx.fill();
+          
+          ctx.fillRect(-obstacle.size/10, -obstacle.size/4, obstacle.size/5, obstacle.size/2);
+          
+          ctx.restore();
+        }
+        else if (obstacle.name.includes("Meeting") || obstacle.name.includes("Outage")) {
+          // Clock shape
+          ctx.save();
+          ctx.translate(obstacle.x, obstacle.y);
+          
+          // Clock face
+          ctx.beginPath();
+          ctx.arc(0, 0, obstacle.size/2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          
+          // Clock hands
+          ctx.strokeStyle = '#000';
+          ctx.lineWidth = 2;
+          
+          // Hour hand
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(
+            Math.cos(frameCount * 0.01) * obstacle.size/4,
+            Math.sin(frameCount * 0.01) * obstacle.size/4
+          );
+          ctx.stroke();
+          
+          // Minute hand
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(
+            Math.cos(frameCount * 0.05) * obstacle.size/3,
+            Math.sin(frameCount * 0.05) * obstacle.size/3
+          );
+          ctx.stroke();
+          
+          ctx.restore();
+        }
+        else {
+          // Default - rotating asteroid-like shape
+          ctx.save();
+          ctx.translate(obstacle.x, obstacle.y);
+          ctx.rotate(frameCount * 0.01);
+          
+          ctx.beginPath();
+          for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            const radius = obstacle.size/2 * (0.8 + Math.sin(i * 3) * 0.2);
+            
+            if (i === 0) {
+              ctx.moveTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+            } else {
+              ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+            }
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          
+          ctx.restore();
+        }
+      }
+      
+      // Draw power-ups
+      for (let powerUp of powerUps) {
+        ctx.fillStyle = `rgb(${powerUp.color[0]}, ${powerUp.color[1]}, ${powerUp.color[2]})`;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1;
+        
+        ctx.save();
+        ctx.translate(powerUp.x, powerUp.y);
+        
+        // Rotate slowly
+        ctx.rotate(frameCount * 0.02);
+        
+        // Draw different shapes based on power-up type
+        if (powerUp.name.includes("Gaming") || powerUp.name.includes("Cheat")) {
+          // Game controller shape
+          ctx.fillRect(-powerUp.size/3, -powerUp.size/4, powerUp.size*2/3, powerUp.size/2);
+          
+          // Controller buttons
+          ctx.fillStyle = '#fff';
+          ctx.beginPath();
+          ctx.arc(powerUp.size/6, 0, powerUp.size/10, 0, Math.PI * 2);
+          ctx.fill();
+          
+          ctx.beginPath();
+          ctx.arc(0, 0, powerUp.size/10, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        else if (powerUp.name.includes("Stack") || powerUp.name.includes("Debug")) {
+          // Stack Overflow logo-inspired shape
+          ctx.beginPath();
+          ctx.moveTo(-powerUp.size/3, -powerUp.size/3);
+          ctx.lineTo(powerUp.size/3, -powerUp.size/3);
+          ctx.lineTo(powerUp.size/3, powerUp.size/3);
+          ctx.lineTo(-powerUp.size/3, powerUp.size/3);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          
+          // Inner shape
+          ctx.fillStyle = '#fff';
+          ctx.beginPath();
+          ctx.moveTo(-powerUp.size/6, -powerUp.size/6);
+          ctx.lineTo(powerUp.size/6, -powerUp.size/6);
+          ctx.lineTo(powerUp.size/6, powerUp.size/6);
+          ctx.lineTo(-powerUp.size/6, powerUp.size/6);
+          ctx.closePath();
+          ctx.fill();
+        }
+        else if (powerUp.name.includes("Coffee") || powerUp.name.includes("Weekend")) {
+          // Coffee cup
+          ctx.beginPath();
+          ctx.moveTo(-powerUp.size/3, -powerUp.size/3);
+          ctx.lineTo(powerUp.size/3, -powerUp.size/3);
+          ctx.lineTo(powerUp.size/3, powerUp.size/3);
+          ctx.lineTo(-powerUp.size/3, powerUp.size/3);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          
+          // Cup handle
+          ctx.beginPath();
+          ctx.arc(powerUp.size/3, 0, powerUp.size/6, -Math.PI/2, Math.PI/2);
+          ctx.stroke();
+          
+          // Steam
+          ctx.beginPath();
+          ctx.moveTo(-powerUp.size/6, -powerUp.size/3);
+          ctx.quadraticCurveTo(
+            -powerUp.size/6 + Math.sin(frameCount * 0.1) * 5, 
+            -powerUp.size/3 - 10, 
+            0, 
+            -powerUp.size/3
+          );
+          ctx.stroke();
+          
+          ctx.beginPath();
+          ctx.moveTo(powerUp.size/6, -powerUp.size/3);
+          ctx.quadraticCurveTo(
+            powerUp.size/6 + Math.sin(frameCount * 0.1 + 1) * 5, 
+            -powerUp.size/3 - 10, 
+            0, 
+            -powerUp.size/3
+          );
+          ctx.stroke();
+        }
+        else if (powerUp.name.includes("Duck")) {
+          // Rubber duck
+          ctx.fillStyle = '#ffff00';
+          
+          // Duck body
+          ctx.beginPath();
+          ctx.arc(0, 0, powerUp.size/3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          
+          // Duck bill
+          ctx.fillStyle = '#ff9900';
+          ctx.beginPath();
+          ctx.ellipse(powerUp.size/3, 0, powerUp.size/6, powerUp.size/10, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          
+          // Duck eye
+          ctx.fillStyle = '#000';
+          ctx.beginPath();
+          ctx.arc(powerUp.size/12, -powerUp.size/12, powerUp.size/15, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        else {
+          // Default star shape for other power-ups
+          ctx.beginPath();
+          for (let i = 0; i < 5; i++) {
+            const angle = (i / 5) * Math.PI * 2 - Math.PI / 2;
+            const outerRadius = powerUp.size / 2;
+            const innerRadius = powerUp.size / 4;
+            
+            const outerX = Math.cos(angle) * outerRadius;
+            const outerY = Math.sin(angle) * outerRadius;
+            
+            const innerAngle = angle + Math.PI / 5;
+            const innerX = Math.cos(innerAngle) * innerRadius;
+            const innerY = Math.sin(innerAngle) * innerRadius;
+            
+            if (i === 0) {
+              ctx.moveTo(outerX, outerY);
+            } else {
+              ctx.lineTo(outerX, outerY);
+            }
+            
+            ctx.lineTo(innerX, innerY);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          
+          // Pulsating effect
+          ctx.globalAlpha = 0.5 + Math.sin(frameCount * 0.1) * 0.3;
+          ctx.beginPath();
+          ctx.arc(0, 0, powerUp.size / 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+        
+        ctx.restore();
+      }
+      
+      // Draw bullets
+      for (let bullet of bullets) {
+        if (bullet.special) {
+          // Special bullets (from power-ups)
+          if (bullet.ai) {
+            // AI Assistant bullets
+            ctx.fillStyle = '#00c8ff';
+            ctx.strokeStyle = '#0088ff';
+            ctx.lineWidth = 1;
+            
+            // Draw an AI bullet (brain-like shape)
+            ctx.save();
+            ctx.translate(bullet.x, bullet.y);
+            
+            // Rotate based on velocity
+            if (bullet.vx !== undefined) {
+              ctx.rotate(Math.atan2(bullet.vy, bullet.vx));
+            }
+            
+            // AI shape
+            ctx.beginPath();
+            ctx.arc(-2, 0, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Add some "neural connections"
+            ctx.strokeStyle = '#80e8ff';
+            ctx.beginPath();
+            ctx.moveTo(3, 0);
+            ctx.lineTo(8, -3);
+            ctx.moveTo(3, 0);
+            ctx.lineTo(8, 3);
+            ctx.stroke();
+            
+            ctx.restore();
+          } else {
+            // Regular special bullets (from power-ups)
+            ctx.fillStyle = '#ff0';
+            ctx.strokeStyle = '#f80';
+            ctx.lineWidth = 1;
+            
+            // Draw a special bullet (code snippet)
+            ctx.save();
+            ctx.translate(bullet.x, bullet.y);
+            
+            // Rotate based on velocity
+            if (bullet.vx !== undefined) {
+              ctx.rotate(Math.atan2(bullet.vy, bullet.vx));
+            }
+            
+            // Code snippet shape
+            ctx.fillRect(-6, -3, 12, 6);
+            ctx.strokeRect(-6, -3, 12, 6);
+            
+            // Code lines
+            ctx.strokeStyle = '#000';
+            ctx.beginPath();
+            ctx.moveTo(-4, -1);
+            ctx.lineTo(4, -1);
+            ctx.moveTo(-4, 1);
+            ctx.lineTo(2, 1);
+            ctx.stroke();
+            
+            // Glowing effect
+            ctx.globalAlpha = 0.5;
+            ctx.beginPath();
+            ctx.arc(0, 0, 8, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            
+            ctx.restore();
+          }
+        } else if (bullet.fromBoss) {
+          // Boss bullets
+          ctx.fillStyle = bullet.color ? `rgb(${bullet.color[0]}, ${bullet.color[1]}, ${bullet.color[2]})` : '#f00';
+          
+          // Draw a boss bullet (warning symbol)
+          ctx.save();
+          ctx.translate(bullet.x, bullet.y);
+          
+          // Rotate based on velocity
+          ctx.rotate(Math.atan2(bullet.vy, bullet.vx));
+          
+          // Warning triangle
+          ctx.beginPath();
+          ctx.moveTo(0, -6);
+          ctx.lineTo(-6, 6);
+          ctx.lineTo(6, 6);
+          ctx.closePath();
+          ctx.fill();
+          
+          // Exclamation mark
+          ctx.fillStyle = '#000';
+          ctx.fillRect(-1, -3, 2, 6);
+          ctx.beginPath();
+          ctx.arc(0, 4, 1, 0, Math.PI * 2);
+          ctx.fill();
+          
+          ctx.restore();
+        } else {
+          // Regular bullets
+          ctx.fillStyle = '#0f0';
+          
+          // Draw a nerdy bullet (binary code)
+          ctx.save();
+          ctx.translate(bullet.x, bullet.y);
+          
+          // Rotate based on velocity
+          if (bullet.vx !== undefined) {
+            ctx.rotate(Math.atan2(bullet.vy, bullet.vx));
+          }
+          
+          // Binary code shape
+          ctx.fillRect(-4, -2, 8, 4);
+          
+          // Binary digits
+          ctx.fillStyle = '#000';
+          ctx.font = '4px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          
+          // Random binary digits that change
+          const binary = (frameCount % 2 === 0) ? "10" : "01";
+          ctx.fillText(binary, 0, 0);
+          
+          ctx.restore();
+        }
+      }
+      
+      // Draw mini-boss if active
+      if (miniBoss) {
+        miniBoss.draw();
+      }
+      
+      // Draw particles
+      for (let p of particles) {
+        if (p.isShockwave) {
+          let alpha = p.life / p.maxLife;
+          ctx.strokeStyle = `rgba(${p.color[0]}, ${p.color[1]}, ${p.color[2]}, ${alpha})`;
+          ctx.lineWidth = 2;
+          
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.stroke();
+        } else {
+          let alpha = p.life / p.maxLife;
+          ctx.fillStyle = `rgba(${p.color[0]}, ${p.color[1]}, ${p.color[2]}, ${alpha})`;
+          
+          ctx.fillRect(p.x, p.y, p.size, p.size);
+        }
+      }
+      
+      // Draw text particles
+      for (let t of textParticles) {
+        let alpha = t.life / 180;
+        
+        // Shadow
+        ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+        ctx.font = `${16 * t.scale}px "Courier New", monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(t.text, t.x + 2, t.y + 2);
+        
+        // Text with bright color
+        ctx.fillStyle = `rgba(255, 255, 100, ${alpha})`;
+        ctx.fillText(t.text, t.x, t.y);
+      }
+      
+      // Draw player ship
+      ctx.save();
+      ctx.translate(ship.x, ship.y);
+      
+      // Draw power-up effects
+      if (activePowerUps["Debug Mode"]) {
+        ctx.save();
+        ctx.rotate(frameCount * 0.05);
+        for (let i = 0; i < 4; i++) {
+          ctx.rotate(Math.PI/2);
+          ctx.fillStyle = 'rgba(255, 255, 0, 0.4)';
+          ctx.beginPath();
+          ctx.moveTo(0, -25);
+          ctx.lineTo(-5, -18);
+          ctx.lineTo(5, -18);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+      
+      if (activePowerUps["Coffee Boost"]) {
+        for (let i = 1; i <= 3; i++) {
+          ctx.fillStyle = `rgba(0, 255, 0, ${0.3 - i * 0.08})`;
+          ctx.beginPath();
+          ctx.moveTo(0, -15 + i * 5);
+          ctx.lineTo(-10 + i, 10 + i * 3);
+          ctx.lineTo(10 - i, 10 + i * 3);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+      
+      if (activePowerUps["Stack Overflow"]) {
+        ctx.fillStyle = 'rgba(255, 165, 0, 0.3)';
+        ctx.beginPath();
+        ctx.arc(0, 0, 20, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      // Draw ship
+      ctx.fillStyle = '#0f0';
+      ctx.strokeStyle = '#0c0';
+      ctx.lineWidth = 2;
+      
+      // Ship body - more detailed spaceship
+      ctx.beginPath();
+      ctx.moveTo(0, -15);
+      ctx.lineTo(-12, 5);
+      ctx.lineTo(-8, 10);
+      ctx.lineTo(8, 10);
+      ctx.lineTo(12, 5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      
+      // Ship cockpit
+      ctx.fillStyle = '#cfc';
+      ctx.beginPath();
+      ctx.ellipse(0, -5, 6, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      
+      // Nerdy glasses
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.ellipse(-3, -5, 3, 3, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.ellipse(3, -5, 3, 3, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      // Bridge between glasses
+      ctx.beginPath();
+      ctx.moveTo(0, -5);
+      ctx.lineTo(-3, -5);
+      ctx.moveTo(0, -5);
+      ctx.lineTo(3, -5);
+      ctx.stroke();
+      
+      // Ship engines
+      ctx.fillStyle = '#ff6600';
+      ctx.beginPath();
+      ctx.rect(-8, 10, 4, 3);
+      ctx.rect(4, 10, 4, 3);
+      ctx.fill();
+      
+      // Engine flames when moving
+      if (keys[37] || keys[38] || keys[39] || keys[40]) {
+        ctx.fillStyle = '#ff0';
+        ctx.beginPath();
+        ctx.moveTo(-8, 13);
+        ctx.lineTo(-6, 13);
+        ctx.lineTo(-7, 13 + Math.random() * 5 + 3);
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.moveTo(8, 13);
+        ctx.lineTo(6, 13);
+        ctx.lineTo(7, 13 + Math.random() * 5 + 3);
+        ctx.fill();
+      }
+      
+      ctx.restore();
+      
+      // Draw active power-up indicators
+      let powerUpX = 130;
+      for (let name in activePowerUps) {
+        let powerUp = activePowerUps[name];
+        
+        // Draw indicator
+        ctx.fillStyle = `rgb(${powerUp.type.color[0]}, ${powerUp.type.color[1]}, ${powerUp.type.color[2]})`;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1;
+        ctx.fillRect(powerUpX, 10, 40, 15);
+        ctx.strokeRect(powerUpX, 10, 40, 15);
+        
+        // Draw timer bar
+        let timerWidth = (powerUp.timer / powerUp.type.duration) * 40;
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(powerUpX, 25, timerWidth, 3);
+        
+        // Draw text
+        ctx.fillStyle = '#fff';
+        ctx.font = '9px "Courier New"';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(name.substring(0, 8), powerUpX + 20, 18);
+        
+        powerUpX += 50;
+      }
+      
+      // Draw score
+      ctx.fillStyle = '#0f0';
+      ctx.font = '20px "Courier New"';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText(`SCORE: ${score}`, 10, 10);
+      
+      // Draw level progress
+      if (currentLevel < LEVELS.length) {
+        ctx.fillStyle = '#0f0';
+        ctx.font = '12px "Courier New"';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText(`NEXT LEVEL: ${score}/${scoreForNextLevel}`, 10, 35);
+        
+        // Draw progress bar
+        let progressWidth = Math.min(1, score / scoreForNextLevel) * 100;
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.3)';
+        ctx.fillRect(10, 50, 100, 5);
+        ctx.fillStyle = '#0f0';
+        ctx.fillRect(10, 50, progressWidth, 5);
+      }
+      
+      // Draw controls info
+      ctx.fillStyle = '#0f0';
+      ctx.font = '12px "Courier New"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('ARROWS: move | SPACE: shoot', canvas.width/2, canvas.height - 5);
+    }
+    
+    // Create a random power-up
+    function createPowerUp() {
+      // Get level-specific power-ups if available
+      let currentLevelData = LEVELS[currentLevel - 1];
+      let powerUpName;
+      
+      if (currentLevelData && currentLevelData.powerUps && currentLevelData.powerUps.length > 0 && Math.random() < 0.7) {
+        // 70% chance to use a level-specific power-up
+        powerUpName = currentLevelData.powerUps[Math.floor(Math.random() * currentLevelData.powerUps.length)];
+      }
+      
+      // Find matching power-up or use a random one
+      let powerUpType;
+      if (powerUpName) {
+        powerUpType = POWER_UP_TYPES.find(p => p.name === powerUpName);
+      }
+      
+      // Fallback to random if not found
+      if (!powerUpType) {
+        powerUpType = POWER_UP_TYPES[Math.floor(Math.random() * POWER_UP_TYPES.length)];
+      }
+      
+      powerUps.push({
+        type: powerUpType,
+        name: powerUpType.name,
+        x: Math.random() * (canvas.width - 100) + 50,
+        y: -30,
+        size: powerUpType.size,
+        color: powerUpType.color
+      });
+    }
+    
+    // Activate a power-up
+    function activatePowerUp(powerUp) {
+      // Create power-up instance
+      let instance = powerUp.type.effect(ship);
+      
+      // Call activate function
+      if (instance.onActivate) {
+        instance.onActivate();
+      }
+      
+      // Add to active power-ups
+      activePowerUps[powerUp.name] = {
+        type: powerUp.type,
+        timer: powerUp.type.duration,
+        instance: instance
+      };
+      
+      // Show power-up message as a single text particle with the name
+      createTextParticle(ship.x, ship.y - 50, powerUp.name + " ACTIVATED!");
+    }
+    
+    // Create an obstacle
+    function createObstacle() {
+      // Get level-specific obstacles if available
+      let currentLevelData = LEVELS[currentLevel - 1];
+      let obstacleName;
+      
+      if (currentLevelData && currentLevelData.obstacles && currentLevelData.obstacles.length > 0) {
+        obstacleName = currentLevelData.obstacles[Math.floor(Math.random() * currentLevelData.obstacles.length)];
+      }
+      
+      // Find matching obstacle or use a random one
+      let obstacleType;
+      if (obstacleName) {
+        obstacleType = OBSTACLE_TYPES.find(o => o.name === obstacleName);
+      }
+      
+      // Fallback to random if not found
+      if (!obstacleType) {
+        obstacleType = OBSTACLE_TYPES[Math.floor(Math.random() * OBSTACLE_TYPES.length)];
+      }
+      
+      // Choose random edge to spawn from
+      let edge = Math.floor(Math.random() * 4);
+      let x, y;
+      
+      // Position obstacle at a random edge
+      switch (edge) {
+        case 0: // Top
+          x = Math.random() * canvas.width;
+          y = -obstacleType.size;
+          break;
+        case 1: // Right
+          x = canvas.width + obstacleType.size;
+          y = Math.random() * canvas.height;
+          break;
+        case 2: // Bottom
+          x = Math.random() * canvas.width;
+          y = canvas.height + obstacleType.size;
+          break;
+        case 3: // Left
+          x = -obstacleType.size;
+          y = Math.random() * canvas.height;
+          break;
+      }
+      
+      // Calculate velocity towards player with some randomness
+      let angle = Math.atan2(ship.y - y, ship.x - x);
+      angle += (Math.random() - 0.5) * 0.5; // Add some randomness
+      
+      // Base speed increases with level
+      let levelSpeedMultiplier = 1 + (currentLevel - 1) * 0.2; // 20% speed increase per level
+      let speed = (Math.random() * 1.5 + 1) * levelSpeedMultiplier;
+      let vx = Math.cos(angle) * speed;
+      let vy = Math.sin(angle) * speed;
+      
+      // Apply weekend mode slowdown if active
+      if (activePowerUps["Weekend Mode"]) {
+        vx *= 0.3;
+        vy *= 0.3;
+      }
+      
+      // Create obstacle object
+      obstacles.push({
+        name: obstacleType.name,
+        size: obstacleType.size,
+        color: obstacleType.color,
+        health: obstacleType.health + Math.floor((currentLevel - 1) / 2), // Health increases every 2 levels
+        texts: obstacleType.texts,
+        x: x,
+        y: y,
+        vx: vx,
+        vy: vy
+      });
+    }
+    
+    // Create explosion effect
+    function createExplosion(x, y, size, color) {
+      // Limiter le nombre maximum de particules
+      const MAX_PARTICLES_PER_EXPLOSION = 15;
+      const MAX_TOTAL_PARTICLES = 50;
+      
+      // Limiter le nombre de particules en fonction de la taille, mais avec un maximum
+      let particleCount = Math.min(Math.floor(size / 3), MAX_PARTICLES_PER_EXPLOSION);
+      
+      // Si on dépasse le nombre maximum de particules, supprimer les plus anciennes
+      if (particles.length > MAX_TOTAL_PARTICLES - particleCount) {
+        particles.splice(0, particleCount);
+      }
+      
+      // Précalculer certaines valeurs pour éviter les calculs répétitifs
+      const twoPI = Math.PI * 2;
+      
+      for (let i = 0; i < particleCount; i++) {
+        let angle = Math.random() * twoPI;
+        let speed = Math.random() * 2 + 1; // Réduire légèrement la vitesse
+        
+        // Précalculer les composantes de vitesse
+        const vx = Math.cos(angle) * speed;
+        const vy = Math.sin(angle) * speed;
+        
+        particles.push({
+          x: x,
+          y: y,
+          vx: vx,
+          vy: vy,
+          size: Math.random() * 2 + 1, // Réduire légèrement la taille
+          color: color,
+          life: Math.random() * 15 + 15, // Réduire légèrement la durée de vie
+          maxLife: 30
+        });
+      }
+      
+      // Ajouter une onde de choc uniquement si on n'en a pas trop
+      if (particles.filter(p => p.isShockwave).length < 5) {
+        particles.push({
+          x: x,
+          y: y,
+          radius: 5,
+          maxRadius: size,
+          color: [255, 255, 255],
+          life: 10, // Réduire la durée de vie
+          maxLife: 10,
+          isShockwave: true
+        });
+      }
+    }
+    
+    // Spawn a mini-boss for the current level
+    function spawnMiniBoss(forceSpawn = false) {
+      // Only check for bossDefeated if not forcing spawn
+      if (miniBoss || (!forceSpawn && bossDefeated)) return; // Don't spawn if one already exists or was defeated (unless forced)
+      
+      const bossData = MINI_BOSSES[currentLevel - 1];
+      if (!bossData) return; // Safety check
+      
+      // Announce the boss
+      createTextParticle(canvas.width / 2, canvas.height / 2 - 50, "BOSS APPROACHING:");
+      createTextParticle(canvas.width / 2, canvas.height / 2, bossData.name);
+      createTextParticle(canvas.width / 2, canvas.height / 2 + 50, bossData.description);
+      
+      // Adjust shoot interval based on level to make higher level bosses more manageable
+      let adjustedShootInterval = bossData.shootInterval;
+      if (currentLevel > 1) {
+        // Add 10 frames to the interval for each level above 1
+        adjustedShootInterval += (currentLevel - 1) * 10;
+      }
+      
+      // Create the mini-boss
+      miniBoss = {
+        name: bossData.name,
+        description: bossData.description,
+        health: bossData.health,
+        maxHealth: bossData.health,
+        size: bossData.size,
+        color: bossData.color,
+        x: canvas.width / 2,
+        y: -bossData.size, // Start off-screen
+        targetY: 80, // Target position (moved higher up)
+        speed: bossData.speed,
+        shootTimer: adjustedShootInterval,
+        shootInterval: adjustedShootInterval,
+        attackMessages: bossData.attackMessages,
+        phase: 1, // Boss phases for different attack patterns
+        phaseTimer: 300, // Time before changing phases
+        entryDelay: 180, // Delay before boss starts attacking (3 seconds at 60fps)
+        isAttacking: false, // Flag to control when boss starts attacking
+        
+        update: function() {
+          // Move towards target position
+          if (this.y < this.targetY) {
+            this.y += this.speed;
+          }
+          
+          // Entry delay before attacking
+          if (!this.isAttacking) {
+            if (this.entryDelay > 0) {
+              this.entryDelay--;
+              // Show warning message when almost ready to attack
+              if (this.entryDelay === 60) {
+                createTextParticle(this.x, this.y - 40, "Preparing to attack!");
+              }
+            } else {
+              this.isAttacking = true;
+              createTextParticle(this.x, this.y - 40, "Attack mode activated!");
+            }
+            return; // Skip the rest of the update until ready to attack
+          }
+          
+          // Horizontal movement based on phase
+          if (this.phase === 1) {
+            // Phase 1: Side-to-side movement
+            this.x = canvas.width / 2 + Math.sin(frameCount * 0.02) * (canvas.width / 3);
+          } else if (this.phase === 2) {
+            // Phase 2: Chase player but with limited speed based on level
+            const dx = ship.x - this.x;
+            // Reduce chase speed for higher levels to make it more manageable
+            const chaseSpeedFactor = Math.max(0.2, 0.5 - (currentLevel - 1) * 0.1);
+            this.x += (dx > 0 ? 1 : -1) * this.speed * chaseSpeedFactor;
+          }
+          
+          // Shooting logic
+          this.shootTimer--;
+          if (this.shootTimer <= 0) {
+            this.shoot();
+            this.shootTimer = this.shootInterval;
+          }
+          
+          // Phase change logic
+          this.phaseTimer--;
+          if (this.phaseTimer <= 0) {
+            this.phase = this.phase === 1 ? 2 : 1;
+            this.phaseTimer = 300;
+            createTextParticle(this.x, this.y - 40, "Phase " + this.phase + " activated!");
+          }
+          
+          // Constrain to canvas
+          this.x = Math.max(this.size / 2, Math.min(canvas.width - this.size / 2, this.x));
+        },
+        
+        shoot: function() {
+          // Display attack message
+          if (this.attackMessages && this.attackMessages.length > 0) {
+            const message = this.attackMessages[Math.floor(Math.random() * this.attackMessages.length)];
+            createTextParticle(this.x, this.y - 40, message);
+          }
+          
+          if (this.phase === 1) {
+            // Phase 1: Spread shot
+            for (let i = -2; i <= 2; i++) {
+              const angle = Math.PI / 2 + (i * Math.PI / 10);
+              bullets.push({
+                x: this.x,
+                y: this.y + this.size / 2,
+                vx: Math.cos(angle) * 4,
+                vy: Math.sin(angle) * 4,
+                fromBoss: true,
+                color: this.color
+              });
+            }
+          } else {
+            // Phase 2: Targeted shot
+            const dx = ship.x - this.x;
+            const dy = ship.y - this.y;
+            const angle = Math.atan2(dy, dx);
+            
+            bullets.push({
+              x: this.x,
+              y: this.y + this.size / 2,
+              vx: Math.cos(angle) * 5,
+              vy: Math.sin(angle) * 5,
+              fromBoss: true,
+              color: this.color
+            });
+            
+            // Add two more bullets with slight angle variation
+            bullets.push({
+              x: this.x,
+              y: this.y + this.size / 2,
+              vx: Math.cos(angle + 0.2) * 5,
+              vy: Math.sin(angle + 0.2) * 5,
+              fromBoss: true,
+              color: this.color
+            });
+            
+            bullets.push({
+              x: this.x,
+              y: this.y + this.size / 2,
+              vx: Math.cos(angle - 0.2) * 5,
+              vy: Math.sin(angle - 0.2) * 5,
+              fromBoss: true,
+              color: this.color
+            });
+          }
+        },
+        
+        draw: function() {
+          // Draw boss body
+          ctx.fillStyle = `rgb(${this.color[0]}, ${this.color[1]}, ${this.color[2]})`;
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 2;
+          
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          
+          // Draw boss features based on level
+          if (currentLevel === 1) {
+            // Gaming Addiction: Game controller features
+            ctx.fillStyle = '#fff';
+            // Eyes (like controller buttons)
+            ctx.beginPath();
+            ctx.arc(this.x - 15, this.y - 10, 8, 0, Math.PI * 2);
+            ctx.arc(this.x + 15, this.y - 10, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Angry mouth
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y + 15, 20, 0.1 * Math.PI, 0.9 * Math.PI, false);
+            ctx.stroke();
+          } else if (currentLevel === 2) {
+            // Imposter Syndrome: Question marks
+            ctx.fillStyle = '#fff';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('?', this.x - 15, this.y - 10);
+            ctx.fillText('?', this.x + 15, this.y - 10);
+            
+            // Worried mouth
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y + 15, 15, 0.8 * Math.PI, 0.2 * Math.PI, true);
+            ctx.stroke();
+          } else if (currentLevel === 3) {
+            // Burnout: Flames
+            ctx.fillStyle = '#ff0';
+            
+            // Flame eyes
+            for (let i = 0; i < 5; i++) {
+              ctx.beginPath();
+              ctx.ellipse(
+                this.x - 15, 
+                this.y - 10 - i * 3, 
+                5, 
+                8 - i, 
+                0, 0, Math.PI * 2
+              );
+              ctx.fill();
+              
+              ctx.beginPath();
+              ctx.ellipse(
+                this.x + 15, 
+                this.y - 10 - i * 3, 
+                5, 
+                8 - i, 
+                0, 0, Math.PI * 2
+              );
+              ctx.fill();
+            }
+            
+            // Exhausted mouth
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(this.x - 20, this.y + 15);
+            ctx.lineTo(this.x + 20, this.y + 15);
+            ctx.stroke();
+          } else if (currentLevel === 4) {
+            // Mortgage & Bills: Dollar signs
+            ctx.fillStyle = '#fff';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('$', this.x - 15, this.y - 10);
+            ctx.fillText('$', this.x + 15, this.y - 10);
+            
+            // Greedy smile
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y + 10, 20, 1.1 * Math.PI, 1.9 * Math.PI, false);
+            ctx.stroke();
+          } else {
+            // Midlife Crisis: Clock features
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            
+            // Clock face
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size / 3, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Clock hands
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(
+              this.x + Math.cos(frameCount * 0.1) * this.size / 4,
+              this.y + Math.sin(frameCount * 0.1) * this.size / 4
+            );
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(
+              this.x + Math.cos(frameCount * 0.01) * this.size / 6,
+              this.y + Math.sin(frameCount * 0.01) * this.size / 6
+            );
+            ctx.stroke();
+          }
+          
+          // Draw health bar
+          const healthPercent = this.health / this.maxHealth;
+          const barWidth = this.size * 1.5;
+          
+          // Background
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+          ctx.fillRect(this.x - barWidth / 2, this.y - this.size / 2 - 15, barWidth, 10);
+          
+          // Health
+          ctx.fillStyle = healthPercent > 0.5 ? '#0f0' : healthPercent > 0.25 ? '#ff0' : '#f00';
+          ctx.fillRect(this.x - barWidth / 2, this.y - this.size / 2 - 15, barWidth * healthPercent, 10);
+          
+          // Border
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(this.x - barWidth / 2, this.y - this.size / 2 - 15, barWidth, 10);
+          
+          // Boss name
+          ctx.fillStyle = '#fff';
+          ctx.font = '12px "Courier New"';
+          ctx.textAlign = 'center';
+          ctx.fillText(this.name, this.x, this.y - this.size / 2 - 25);
+        },
+        
+        takeDamage: function(amount) {
+          this.health -= amount;
+          
+          // Visual feedback
+          createTextParticle(this.x, this.y, "-" + amount);
+          
+          // Check if defeated
+          if (this.health <= 0) {
+            this.defeat();
+          } else if (this.health <= this.maxHealth * 0.5 && this.phase === 1) {
+            // Force phase change at 50% health if still in phase 1
+            this.phase = 2;
+            this.phaseTimer = 300;
+            createTextParticle(this.x, this.y - 40, "You've made me angry!");
+          }
+        },
+        
+        defeat: function() {
+          // Create big explosion
+          for (let i = 0; i < 30; i++) {
+            createExplosion(
+              this.x + (Math.random() - 0.5) * this.size,
+              this.y + (Math.random() - 0.5) * this.size,
+              this.size / 3,
+              this.color
+            );
+          }
+          
+          // Add score
+          score += this.maxHealth * 10;
+          
+          // Show victory message
+          createTextParticle(canvas.width / 2, canvas.height / 2 - 30, this.name + " DEFEATED!");
+          createTextParticle(canvas.width / 2, canvas.height / 2, "BONUS: " + (this.maxHealth * 10) + " POINTS!");
+          
+          // Mark as defeated
+          miniBoss = null;
+          bossDefeated = true;
+          
+          // Check if this is the final boss (level 5)
+          if (currentLevel === 5) {
+            setTimeout(function() {
+              showEndScreen();
+            }, 2000); // Show end screen after 2 seconds
+          }
+        }
+      };
+    }
+    
+    // Create floating text
+    function createTextParticle(x, y, text) {
+      // Limiter le nombre maximum de particules de texte
+      const MAX_TEXT_PARTICLES = 10;
+      
+      // Si on dépasse le maximum, supprimer les plus anciennes
+      if (textParticles.length >= MAX_TEXT_PARTICLES) {
+        textParticles.shift(); // Supprimer la plus ancienne
+      }
+      
+      textParticles.push({
+        x: x,
+        y: y,
+        text: text,
+        life: 120, // Réduire légèrement la durée de vie
+        scale: 1.5  // Add scale for larger text
+      });
+    }
+    
+    // Check if game is completed (level 5 boss defeated or score >= 7500)
+    function checkGameCompletion() {
+      // Only check for completion in level 5
+      if (currentLevel === 5) {
+        if ((miniBoss && miniBoss.health <= 0) || score >= 7500) {
+          showEndScreen();
+        }
+      }
+    }
+    
+    // Show end screen
+    function showEndScreen() {
+      gameRunning = false;
+      document.getElementById('endScreen').style.display = 'flex';
+    }
+    
+    // Continue playing after end screen
+    function continuePlaying() {
+      document.getElementById('endScreen').style.display = 'none';
+      gameRunning = true;
+      requestAnimationFrame(gameLoop);
+    }
+    
+    
+    
+    // Function to close leaderboard
+    
+    
+    // Start the game
+    init();
+  </script>
+</body>
+</html>

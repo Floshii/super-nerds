@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Super Nerds Adventure</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0a0a20;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+    }
+    h1 {
+      color: #0f0;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      margin: 20px 0;
+      text-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .button {
+      background-color: #222;
+      color: #0f0;
+      border: 2px solid #0f0;
+      padding: 12px 24px;
+      font-family: 'Courier New', monospace;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      cursor: pointer;
+      margin: 10px;
+      font-size: 16px;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .button:hover {
+      background-color: #0f0;
+      color: #000;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
+    }
+    .description {
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 20px;
+      border-radius: 5px;
+      border: 1px solid #0f0;
+      margin: 20px 0;
+      max-width: 600px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>The Super Nerds Adventure</h1>
+    
+    <div class="description">
+      <p>Bienvenue dans The Super Nerds Adventure, un jeu où vous progressez à travers les étapes de la vie d'un nerd, de l'adolescence à l'âge adulte !</p>
+      <p>Utilisez les flèches pour vous déplacer, la barre d'espace pour tirer, et collectez des power-ups pour améliorer vos capacités.</p>
+    </div>
+    
+    <a href="game.html" class="button">Jouer maintenant</a>
+    
+    <p>Créé par <a href="https://www.youtube.com/@FlorentThurin" target="_blank" style="color: #0f0; text-decoration: underline;">Florent Thurin</a></p>
+  </div>
+
+  <script>
+    // Redirect to game page after a short delay if preferred
+    // setTimeout(() => window.location.href = 'game.html', 3000);
+  </script>
+</body>
+</html> 
